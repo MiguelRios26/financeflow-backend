@@ -18,6 +18,7 @@ const cors = require('cors');
 const rotaCriarPreferencia = require('./routes/criarPreferencia');
 const rotaWebhook = require('./routes/webhook');
 const rotaCheckarStatus = require('./routes/checarStatus');
+const rotaGestorIA = require('./routes/gestorIA');
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.get('/', (req, res) => res.send('FinanceFlow PRO backend rodando ✅'));
 app.use(rotaCriarPreferencia);
 app.use(rotaWebhook);
 app.use(rotaCheckarStatus);
+app.use(rotaGestorIA);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
