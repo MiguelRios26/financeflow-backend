@@ -1,54 +1,57 @@
 /**
  * PASSO 3 — POST /api/criar-preferencia-mp
- * Cria uma ASSINATURA MENSAL RECORRENTE (API de Assinaturas / PreApproval do
- * Mercado Pago — não é mais um pagamento único) e devolve o init_point para
- * o front-end redirecionar o usuário e autorizar a cobrança recorrente.
+ * Cria uma PREFERÊNCIA DE PAGAMENTO ÚNICO (Checkout Pro do Mercado Pago) e
+ * devolve o init_point para o front-end redirecionar o usuário.
  *
  * Mantém o mesmo nome de rota (/api/criar-preferencia-mp) por compatibilidade
- * com o front-end (premium-paywall.js), mesmo por baixo dos panos agora ser
- * uma assinatura em vez de uma "preferência" de pagamento único.
+ * com o front-end (premium-paywall.js).
  */
 const express = require('express');
-const { preapproval } = require('../lib/mercadopago');
+const { preference } = require('../lib/mercadopago');
 
 const router = express.Router();
 
-const PRECO_PRO_MENSAL = 29.9;
-const MOTIVO_ASSINATURA = 'Plano PRO - FinanceFlow (assinatura mensal)';
+const PRECO_PRO_UNICO = 24.99;
+const TITULO_PRO = 'FinanceFlow PRO - Acesso vitalício (Metas, Investimentos e Educação Financeira)';
 
 router.post('/api/criar-preferencia-mp', async (req, res) => {
-    const email = String(req.body?.email || '').trim().toLowerCase();
+  const email = String(req.body?.email || '').trim().toLowerCase();
 
-              if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
-                    return res.status(400).json({ erro: 'E-mail inválido ou não informado.' });
-              }
+  if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+    return res.status(400).json({ erro: 'E-mail inválido ou não informado.' });
+  }
 
-              const frontendUrl = (process.env.FRONTEND_URL || '').replace(/\/$/, '');
-    const backendUrl = (process.env.BACKEND_URL || '').replace(/\/$/, '');
+  const frontendUrl = (process.env.FRONTEND_URL || '').replace(/\/$/, '');
+  const backendUrl = (process.env.BACKEND_URL || '').replace(/\/$/, '');
 
-              try {
-                    const resultado = await preapproval.create({
-                            body: {
-                                      reason: MOTIVO_ASSINATURA,
-                                      external_reference: email,
-                                      payer_email: email,
-                                      back_url: `${frontendUrl}/?status=sucesso`,
-                                      notification_url: `${backendUrl}/webhook-mercadopago`,
-                                      auto_recurring: {
-                                                  frequency: 1,
-                                                  frequency_type: 'months',
-                                                  transaction_amount: PRECO_PRO_MENSAL,
-                                                  currency_id: 'BRL',
-                                      },
-                                      status: 'pending',
-                            },
-                    });
+  try {
+    const resultado = await preference.create({
+      body: {
+        items: [
+          {
+            title: TITULO_PRO,
+            quantity: 1,
+            unit_price: PRECO_PRO_UNICO,
+            currency_id: 'BRL',
+          },
+        ],
+        external_reference: email,
+        payer: { email },
+        back_urls: {
+          success: `${frontendUrl}/?status=sucesso`,
+          pending: `${frontendUrl}/?status=pendente`,
+          failure: `${frontendUrl}/?status=falha`,
+        },
+        auto_return: 'approved',
+        notification_url: `${backendUrl}/webhook-mercadopago`,
+      },
+    });
 
-      return res.json({ init_point: resultado.init_point });
-              } catch (err) {
-                    console.error('[criar-preferencia-mp] erro:', err);
-                    return res.status(500).json({ erro: 'Não foi possível criar a assinatura.' });
-              }
+    return res.json({ init_point: resultado.init_point });
+  } catch (err) {
+    console.error('[criar-preferencia-mp] erro:', err);
+    return res.status(500).json({ erro: 'Não foi possível criar o pagamento.' });
+  }
 });
 
 module.exports = router;
