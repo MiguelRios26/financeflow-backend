@@ -16,6 +16,7 @@ const express = require('express');
 const cors = require('cors');
 
 const rotaCriarPreferencia = require('./routes/criarPreferencia');
+const rotaCriarPagamentoLanding = require('./routes/criarPagamentoLanding');
 const rotaWebhook = require('./routes/webhook');
 const rotaCheckarStatus = require('./routes/checarStatus');
 const rotaGestorIA = require('./routes/gestorIA');
@@ -28,6 +29,7 @@ app.use(express.json());
 app.get('/', (req, res) => res.send('FinanceFlow PRO backend rodando ✅'));
 
 app.use(rotaCriarPreferencia);
+app.use(rotaCriarPagamentoLanding);
 app.use(rotaWebhook);
 app.use(rotaCheckarStatus);
 app.use(rotaGestorIA);
