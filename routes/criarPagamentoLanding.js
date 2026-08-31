@@ -15,7 +15,7 @@ const VALOR_TOTAL = 358.92; // 12x de R$29,91
 const TITULO = 'FinanceFlow - Acesso completo ao app';
 
 router.post('/api/criar-pagamento-landing', async (req, res) => {
-  const landingUrl = (process.env.LANDING_URL || process.env.FRONTEND_URL || '').replace(/\/$/, '');
+  const landingUrl = (process.env.LANDING_URL || 'https://miguelrios26.github.io/financeflow-landing').replace(/\/$/, '');
 
   try {
     const resultado = await preference.create({
